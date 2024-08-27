@@ -5,55 +5,53 @@ import numpy as np
 from scipy.linalg import expm
 from scipy.integrate import solve_ivp
 
-L0=np.array([[  2,   1, 0.5],
-             [  1,   3,0.25],
-             [0.5,0.25,   4]])
+q10=0
+q20=-2*np.log(2)
+q30=0
 
-A1=expm(L0)
+p10=4
+p20=6
+p30=8
 
-a1=L0[0,0]
-a2=L0[1,1]
-a3=L0[2,2]
+def toda_flow(t, y):
+    q1=y[0]
+    q2=y[1]
+    q3=y[2]
+    p1=y[3]
+    p2=y[4]
+    p3=y[5]
+    return [p1,p2,p3,
+           np.exp(-(q1-q3))-np.exp(-(q2-q1)),
+           np.exp(-(q2-q1))-np.exp(-(q3-q2)),
+           np.exp(-(q3-q2))-np.exp(-(q1-q3))]
 
-b1=L0[1,0]
-b2=L0[1,2]
-b3=L0[2,0]
+initial_condition=[q10,q20,q30,p10,p20,p30]
+final_time=10
+sol = solve_ivp(toda_flow, [0,final_time], initial_condition,dense_output=True)
+t = range(final_time)
+z = sol.sol(t)
 
-p1=2*a1
-p2=2*a2
-p3=2*a3
+def L(y):
+    a1=0.5*y[3]
+    a2=0.5*y[4]
+    a3=0.5*y[5]
+    b1=0.5*np.exp(-0.5*(y[1]-y[0]))
+    b2=0.5*np.exp(-0.5*(y[2]-y[1]))
+    b3=0.5*np.exp(-0.5*(y[0]-y[2]))
+    return [[a1,b1,b3],
+            [b1,a2,b2],
+            [b3,b2,a3]]
 
-b1=0.5*np.exp(-0.5*1)
-b2=0.5*np.exp(-0.5*2)
-b3=0.5*np.exp(-0.5*-3)
+for i in range(10):
+    plt.plot(i,expm(L(z.T[i]))[0,0],'ro')
 
-def toda_flow(t, y): return [y[3],y[4],y[5],
-                             np.exp(-(y[0]-y[2]))-np.exp(-(y[1]-y[0])),
-                             np.exp(-(y[1]-y[0]))-np.exp(-(y[2]-y[1])),
-                             np.exp(-(y[2]-y[1]))-np.exp(-(y[0]-y[2]))
-                             ]
-
-# Fix this!!
-# def flaschka(t, y): return [2*(y[3]*y[3]-y[0]*y[0]),
-#                             2*(y[0]*y[0]-y[1]*y[1]),
-#                             2*(y[1]*y[1]-y[2]*y[2]),
-#                             y[10]*(y[1]*y[1]-y[2]*y[2]),
-#                             y[4],y[5],
-#                              np.exp(-(y[0]-y[2]))-np.exp(-(y[1]-y[0])),
-#                              np.exp(-(y[1]-y[0]))-np.exp(-(y[2]-y[1])),
-#                              np.exp(-(y[2]-y[1]))-np.exp(-(y[0]-y[2]))
-#                              ]
-
-finalTime=200
-sol = solve_ivp(toda_flow, [0,finalTime], [0,0,0,2*L0[0,0],2*L0[1,1],2*L0[2,2]],dense_output=True)
-
-t = np.linspace(0, finalTime, finalTime+1)
-fig, ax = plt.subplots()
-
-#ANIMATION
-
-# For testing
-z = sol.sol(t)[3:]
-ax.plot(t, 0.5*z.T)
+# #QR
+# A=expm(L(z.T[0]))
+# for i in t:
+#     Q, R = np.linalg.qr(A)
+#     A=np.matmul(R,Q)
+#     plt.plot(i,A[0,0],'bo')
+#     plt.plot(i,A[1,1],'bo')
+#     plt.plot(i,A[2,2],'bo')
 
 plt.show()

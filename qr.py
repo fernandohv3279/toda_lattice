@@ -1,10 +1,11 @@
 import numpy as np
+from scipy.linalg import logm
 
-A = np.array([[1, 2, 3], [3, 4, 5], [3, 7, 0]])
+A1 = np.array([[3, 0, 1],
+              [0, 4, 2],
+              [1, 2, 5]])
+for i in range(100):
+    Q, R = np.linalg.qr(A1)
+    A1=np.matmul(R,Q)
 
-for i in range(500):
-    # A = input a matrix
-    Q, R = np.linalg.qr(A)
-    A=np.matmul(R,Q)
-
-print(A)
+print(A1)
